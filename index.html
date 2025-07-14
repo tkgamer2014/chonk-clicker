@@ -1,66 +1,70 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Click the Frog!</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Custom Frog</title>
   <style>
-    html, body {
+    :root {
+      --bg-light: #f0f8ff;
+      --bg-dark: #1e1e1e;
+      --text-light: #000;
+      --text-dark: #fff;
+    }
+
+    body {
       margin: 0;
       padding: 0;
-      height: 100%;
-      width: 100%;
-      overflow: hidden;
-      background-color: #f8d9b6;
       display: flex;
-      flex-direction: column;
       justify-content: center;
       align-items: center;
-      font-family: sans-serif;
+      height: 100vh;
+      background-color: var(--bg-light);
+      transition: background-color 0.3s ease;
     }
-    h1 {
-      color: #2e4600;
-      margin-bottom: 10px;
+
+    .container {
+      text-align: center;
     }
-    #score {
-      font-size: 24px;
-      color: #2e4600;
-      margin-bottom: 20px;
+
+    img {
+      max-width: 90vw;
+      max-height: 90vh;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
     }
-    #frog {
-      width: 180px;
-      height: 180px;
-      background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Red_eyed_tree_frog_edit2.jpg/320px-Red_eyed_tree_frog_edit2.jpg');
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      border-radius: 50%;
+
+    .toggle-button {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: transparent;
+      border: none;
       cursor: pointer;
-      transition: transform 0.1s;
+      font-size: 24px;
     }
-    #frog:active {
-      transform: scale(0.95);
+
+    body.dark {
+      background-color: var(--bg-dark);
     }
   </style>
 </head>
 <body>
-  <h1>🐸 Click the Frog!</h1>
-  <p id="score">Score: 0</p>
-  <div id="frog"></div>
-
-  <audio id="bopSound" src="https://www.soundjay.com/button/sounds/button-16.mp3"></audio>
+  <button class="toggle-button" onclick="toggleMode()">🌙</button>
+  <div class="container">
+    <img src="https://chat.openai.com/cdn/pub/file-RfnLP8dSAt9kUc8LPgdSUn" alt="Frog" />
+  </div>
 
   <script>
-    const frog = document.getElementById('frog');
-    const scoreDisplay = document.getElementById('score');
-    const bopSound = document.getElementById('bopSound');
-    let score = 0;
-
-    frog.addEventListener('click', () => {
-      score++;
-      scoreDisplay.textContent = `Score: ${score}`;
-      bopSound.currentTime = 0;
-      bopSound.play();
-    });
+    function toggleMode() {
+      document.body.classList.toggle("dark");
+      const button = document.querySelector(".toggle-button");
+      if (document.body.classList.contains("dark")) {
+        button.textContent = "☀️";
+      } else {
+        button.textContent = "🌙";
+      }
+    }
   </script>
 </body>
 </html>
