@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Custom Frog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Click Frog Game</title>
   <style>
     :root {
       --bg-light: #f0f8ff;
@@ -15,34 +15,32 @@
     body {
       margin: 0;
       padding: 0;
+      font-family: sans-serif;
+      background-color: var(--bg-light);
+      transition: background-color 0.3s ease;
+    }
+
+    body.dark {
+      background-color: var(--bg-dark);
+      color: var(--text-dark);
+    }
+
+    .container {
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
-      background-color: var(--bg-light);
-      transition: background-color 0.3s ease;
-      font-family: Arial, sans-serif;
-      position: relative;
-    }
-
-    .container {
+      flex-direction: column;
       text-align: center;
     }
 
-    /* The frog is made 25% smaller using a scale transform (0.75 = 75% of original size) */
-    #frog {
+    img {
+      width: 300px;
       max-width: 90vw;
-      max-height: 90vh;
       border-radius: 20px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-      transform: scale(0.75);
-      transition: transform 0.1s;
+      transition: transform 0.2s;
       cursor: pointer;
-    }
-
-    /* On active (click) state, it briefly scales to 95% of its scaled size */
-    #frog:active {
-      transform: scale(0.7125); /* 0.75 * 0.95 */
     }
 
     .toggle-button {
@@ -55,39 +53,151 @@
       font-size: 24px;
     }
 
-    body.dark {
-      background-color: var(--bg-dark);
-      color: var(--text-dark);
+    #counter {
+      font-size: 1.5rem;
+      margin-top: 10px;
     }
 
-    #counter {
-      margin-top: 10px;
-      font-size: 24px;
+    .sidebar {
+      position: fixed;
+      right: 0;
+      top: 0;
+      width: 220px;
+      height: 100%;
+      background: rgba(255,255,255,0.95);
+      padding: 20px;
+      box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar.open {
+      transform: translateX(0);
+    }
+
+    .menu-toggle {
+      position: fixed;
+      right: 0;
+      top: 100px;
+      background-color: #007acc;
+      color: white;
+      border: none;
+      padding: 10px;
+      border-top-left-radius: 10px;
+      border-bottom-left-radius: 10px;
+      cursor: pointer;
+    }
+
+    .upgrade-button {
+      margin-top: 20px;
+      padding: 10px;
+      font-size: 1rem;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .upgrade-button:disabled {
+      background: #aaa;
+      cursor: not-allowed;
+    }
+
+    body.dark .sidebar {
+      background: #2a2a2a;
+      color: white;
+    }
+
+    body.dark .menu-toggle {
+      background-color: #444;
     }
   </style>
 </head>
 <body>
   <button class="toggle-button" onclick="toggleMode()">🌙</button>
+  <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+
+  <div class="sidebar" id="sidebar">
+    <h3>Upgrades</h3>
+    <button id="autoClickerBtn" class="upgrade-button" disabled onclick="activateAutoClicker()">Buy Auto-Clicker (-100)</button>
+    <button id="doubleClickBtn" class="upgrade-button" disabled onclick="activateDoubleClick()">Buy Double Clicks (-200)</button>
+  </div>
+
   <div class="container">
-    <img id="frog" src="https://i.imgur.com/3UGeMaJ.jpeg" alt="Frog" />
-    <p id="counter">Clicks: 0</p>
+    <img id="frog" src="https://i.imgur.com/3UGeMaJ.jpeg" alt="Frog" onclick="clickFrog()" />
+    <div id="counter">Clicks: 0</div>
   </div>
 
   <script>
-    let clicks = 0;
-    const frog = document.getElementById('frog');
-    const counter = document.getElementById('counter');
+    let count = parseInt(localStorage.getItem("clicks")) || 0;
+    let doubleClickActive = localStorage.getItem("doubleClick") === "true";
+    let autoClickActive = localStorage.getItem("autoClick") === "true";
+    let autoClickInterval = null;
 
-    frog.addEventListener('click', () => {
-      clicks++;
-      counter.textContent = 'Clicks: ' + clicks;
-    });
-    
     function toggleMode() {
       document.body.classList.toggle("dark");
       const button = document.querySelector(".toggle-button");
       button.textContent = document.body.classList.contains("dark") ? "☀️" : "🌙";
     }
+
+    function toggleMenu() {
+      document.getElementById("sidebar").classList.toggle("open");
+    }
+
+    function clickFrog() {
+      count += doubleClickActive ? 2 : 1;
+      saveProgress();
+      updateUI();
+    }
+
+    function activateAutoClicker() {
+      if (count >= 100 && !autoClickActive) {
+        count -= 100;
+        autoClickActive = true;
+        localStorage.setItem("autoClick", "true");
+        saveProgress();
+        startAutoClicking();
+        updateUI();
+      }
+    }
+
+    function startAutoClicking() {
+      if (!autoClickInterval) {
+        autoClickInterval = setInterval(() => {
+          count += 5;
+          saveProgress();
+          updateUI();
+        }, 1000);
+      }
+    }
+
+    function activateDoubleClick() {
+      if (count >= 200 && !doubleClickActive) {
+        count -= 200;
+        doubleClickActive = true;
+        localStorage.setItem("doubleClick", "true");
+        saveProgress();
+        updateUI();
+      }
+    }
+
+    function updateUI() {
+      document.getElementById("counter").textContent = `Clicks: ${count}`;
+      document.getElementById("autoClickerBtn").disabled = autoClickActive || count < 100;
+      document.getElementById("doubleClickBtn").disabled = doubleClickActive || count < 200;
+    }
+
+    function saveProgress() {
+      localStorage.setItem("clicks", count);
+    }
+
+    // On page load
+    window.onload = function () {
+      updateUI();
+      if (autoClickActive) startAutoClicking();
+    };
   </script>
 </body>
 </html>
