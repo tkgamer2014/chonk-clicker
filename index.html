@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Click Frog Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Frog Clicker</title>
   <style>
     :root {
       --bg-light: #f0f8ff;
@@ -39,21 +39,21 @@
       max-width: 90vw;
       border-radius: 20px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-      transition: transform 0.2s;
       cursor: pointer;
+      transition: transform 0.1s ease;
     }
 
     .toggle-button {
       position: absolute;
       top: 20px;
-      right: 20px;
+      right: 60px;
       background: transparent;
       border: none;
       cursor: pointer;
       font-size: 24px;
     }
 
-    #counter {
+    #counter, #cps {
       font-size: 1.5rem;
       margin-top: 10px;
     }
@@ -62,13 +62,15 @@
       position: fixed;
       right: 0;
       top: 0;
-      width: 220px;
+      width: 250px;
       height: 100%;
       background: rgba(255,255,255,0.95);
       padding: 20px;
       box-shadow: -2px 0 5px rgba(0,0,0,0.1);
       transform: translateX(100%);
       transition: transform 0.3s ease;
+      z-index: 100;
+      overflow-y: auto;
     }
 
     .sidebar.open {
@@ -86,6 +88,8 @@
       border-top-left-radius: 10px;
       border-bottom-left-radius: 10px;
       cursor: pointer;
+      font-size: 20px;
+      z-index: 101;
     }
 
     .upgrade-button {
@@ -117,24 +121,28 @@
 </head>
 <body>
   <button class="toggle-button" onclick="toggleMode()">🌙</button>
-  <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+  <button class="menu-toggle" id="menuToggle" onclick="toggleMenu()">☰</button>
 
   <div class="sidebar" id="sidebar">
     <h3>Upgrades</h3>
-    <button id="autoClickerBtn" class="upgrade-button" disabled onclick="activateAutoClicker()">Buy Auto-Clicker (-100)</button>
-    <button id="doubleClickBtn" class="upgrade-button" disabled onclick="activateDoubleClick()">Buy Double Clicks (-200)</button>
+    <button id="autoClickerBtn" class="upgrade-button" onclick="activateAutoClicker()">
+      Buy Chonk (<span id="autoClickerCost">100</span>)
+    </button>
+    <button id="doubleClickBtn" class="upgrade-button" onclick="activateDoubleClick()">Buy Double Clicks (200)</button>
   </div>
 
   <div class="container">
     <img id="frog" src="https://i.imgur.com/3UGeMaJ.jpeg" alt="Frog" onclick="clickFrog()" />
     <div id="counter">Clicks: 0</div>
+    <div id="cps">CPS: 0</div>
   </div>
 
   <script>
     let count = parseInt(localStorage.getItem("clicks")) || 0;
     let doubleClickActive = localStorage.getItem("doubleClick") === "true";
-    let autoClickActive = localStorage.getItem("autoClick") === "true";
-    let autoClickInterval = null;
+    let autoClickerCount = parseInt(localStorage.getItem("autoClickers")) || 0;
+    let autoClickerBaseCost = 100;
+    let cps = autoClickerCount * 5;
 
     function toggleMode() {
       document.body.classList.toggle("dark");
@@ -143,7 +151,10 @@
     }
 
     function toggleMenu() {
-      document.getElementById("sidebar").classList.toggle("open");
+      const sidebar = document.getElementById("sidebar");
+      const menuBtn = document.getElementById("menuToggle");
+      sidebar.classList.toggle("open");
+      menuBtn.textContent = sidebar.classList.contains("open") ? "✖" : "☰";
     }
 
     function clickFrog() {
@@ -152,24 +163,18 @@
       updateUI();
     }
 
-    function activateAutoClicker() {
-      if (count >= 100 && !autoClickActive) {
-        count -= 100;
-        autoClickActive = true;
-        localStorage.setItem("autoClick", "true");
-        saveProgress();
-        startAutoClicking();
-        updateUI();
-      }
+    function getAutoClickerCost() {
+      return autoClickerBaseCost + (autoClickerCount * 10);
     }
 
-    function startAutoClicking() {
-      if (!autoClickInterval) {
-        autoClickInterval = setInterval(() => {
-          count += 5;
-          saveProgress();
-          updateUI();
-        }, 1000);
+    function activateAutoClicker() {
+      let cost = getAutoClickerCost();
+      if (count >= cost) {
+        count -= cost;
+        autoClickerCount++;
+        cps = autoClickerCount * 5;
+        saveProgress();
+        updateUI();
       }
     }
 
@@ -185,18 +190,28 @@
 
     function updateUI() {
       document.getElementById("counter").textContent = `Clicks: ${count}`;
-      document.getElementById("autoClickerBtn").disabled = autoClickActive || count < 100;
+      document.getElementById("autoClickerCost").textContent = getAutoClickerCost();
+      document.getElementById("cps").textContent = `CPS: ${cps}`;
       document.getElementById("doubleClickBtn").disabled = doubleClickActive || count < 200;
+      document.getElementById("autoClickerBtn").disabled = count < getAutoClickerCost();
     }
 
     function saveProgress() {
       localStorage.setItem("clicks", count);
+      localStorage.setItem("autoClickers", autoClickerCount);
     }
 
-    // On page load
+    function startAutoClicking() {
+      setInterval(() => {
+        count += cps;
+        saveProgress();
+        updateUI();
+      }, 1000);
+    }
+
     window.onload = function () {
       updateUI();
-      if (autoClickActive) startAutoClicking();
+      startAutoClicking();
     };
   </script>
 </body>
